@@ -8,16 +8,16 @@ from matplotlib.colors import LinearSegmentedColormap
 # Directory where CSV files are stored
 directory = 'ddf--datapoints--population--by--country--age--gender--year/'
 
-# Function to categorize ages into age groups
+# function to categorize ages into age groups, used same groups as previous example
 def categorize_age_group(df):
-    bins = [0, 14, 30, 45, 65, 100]  # Adjust bins according to your age ranges
+    bins = [0, 14, 30, 45, 65, 100]  
     labels = ['0-14', '15-30', '31-45', '46-65', '66+']
     
     if 'age' in df.columns:
         df['age_group'] = pd.cut(df['age'], bins=bins, labels=labels, right=True)
     return df
 
-# Function to dynamically load all available countries based on filenames
+# function to dynamically load all available countries based on filenames
 def load_data(directory):
     data = {}
     country_labels = {}
@@ -25,29 +25,29 @@ def load_data(directory):
     # Loop through the directory and find CSV files that match the pattern
     for filename in os.listdir(directory):
         if filename.endswith('.csv') and '--by--country-' in filename:
-            # Extract the country code from the filename
+            # Extract country code from the filename
             country_code = filename.split('--by--country-')[1].split('--age--gender--year.csv')[0]
             country_labels[country_code] = country_code.upper()  # For now, we will use the country code as the label
             
-            # Load the data and store it in the dictionary
+            # Load the data, store in data dictionary
             filepath = os.path.join(directory, filename)
             df = pd.read_csv(filepath)
             
-            # Ensure the year is numeric and categorize age groups
-            df['year'] = pd.to_numeric(df['year'], errors='coerce')  # Convert year to numeric
+            # make sure year is numeric, categorize age groups
+            df['year'] = pd.to_numeric(df['year'], errors='coerce')  
             df = categorize_age_group(df)
             
             data[country_code] = df
     
     return data, country_labels
 
-# Load data for all countries
+# load data for all countries
 data, country_labels = load_data(directory)
 
-# Convert the country labels for better readability in the dropdown
+# convert the country labels to improve readability in the dropdown
 country_options = list(country_labels.values())
 
-# Sidebar: Country Selection
+# Edit Country Selection Sidebar
 st.sidebar.title("Population Dashboard")
 selected_countries = st.sidebar.multiselect(
     'Select 2-3 countries to compare', 
@@ -55,14 +55,14 @@ selected_countries = st.sidebar.multiselect(
     default=country_options[:3]  # Default to first 3 countries
 )
 
-# Sidebar: Year range selection
+# Edit Year range selection Sidebar
 year_range = st.sidebar.slider('Select Year Range', min_value=1950, max_value=2020, value=(1950, 2020))
 
-# Sidebar: Age group selection
+# Edit Age group selection Sidebar
 age_groups = ['0-14', '15-30', '31-45', '46-65', '66+']
 selected_age_groups = st.sidebar.multiselect('Select Age Groups', age_groups, default=age_groups)
 
-# Main Section: Display Population Trends
+# Display Population Trends in Main Section: 
 st.title("Population Trends Over Time")
 
 # Filter data based on selections (for total population, not filtered by age group)
@@ -75,25 +75,25 @@ def filter_data(data, selected_countries, year_range):
     for country_code in selected_country_codes:
         df_country = data[country_code]
         
-        # Ensure that 'year' exists
+        # Make sure that 'year' exists, add full country name for labeling
         if 'year' in df_country.columns:
             df_country = df_country[(df_country['year'] >= year_range[0]) & (df_country['year'] <= year_range[1])]
-            df_country['country'] = country_labels[country_code]  # Add full country name for labeling
+            df_country['country'] = country_labels[country_code]  
             filtered_data = pd.concat([filtered_data, df_country], ignore_index=True)
     
     return filtered_data
 
 filtered_data = filter_data(data, selected_countries, year_range)
 
-# Plot total population trends over time (NOT filtered by age group)
+# Plot total population trends over time, this is not filtered by age group
 if not filtered_data.empty:
     st.subheader("Total Population Over Time")
 
     fig, ax = plt.subplots(figsize=(10, 6))
     
-    # Get a colormap to ensure corresponding colors
+    # Get a colormap for each country
     colors = cm.get_cmap('Set2', len(selected_countries)).colors
-    country_colors = {}  # To store the color of each country
+    country_colors = {}  # store the color of each country
     
     for i, country in enumerate(selected_countries):
         country_data = filtered_data[filtered_data['country'] == country]
@@ -123,7 +123,7 @@ else:
 if selected_age_groups:
     st.subheader("Demographic Shifts by Age Group (Stacked Bar Chart for Each Country)")
 
-    # Define years for comparison
+    # Define years for comparison, used same as previous assignment
     years = [1950, 1985, 2020]
 
     for country in selected_countries:
